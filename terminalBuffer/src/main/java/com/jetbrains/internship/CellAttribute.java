@@ -1,5 +1,7 @@
 package com.jetbrains.internship;
 
+import java.util.Objects;
+
 /**
  * Sequences of chars will likely share the same attributes,
  * keep them in a single obj with shared reference to reduce mem footprint
@@ -20,5 +22,18 @@ public record CellAttribute(byte foregroundColor, byte backgroundColor, byte sty
     // fully default style
     public CellAttribute() {
         this((byte) -1, (byte) -1, (byte) 0);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CellAttribute that = (CellAttribute) o;
+        return foregroundColor == that.foregroundColor && backgroundColor == that.backgroundColor && styleMask == that.styleMask;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(foregroundColor, backgroundColor, styleMask);
     }
 }
