@@ -133,8 +133,7 @@ public final class Line {
         if (count <= 0) return null;
 
         // how many cells fall off the right edge
-        int spillSize = Math.max(0, col + count - width);
-        System.out.println(spillSize);
+        int spillSize = Math.min(count, width - col);
         LineFragment spill = null;
         if (spillSize > 0) {
             spill = new LineFragment(spillSize);

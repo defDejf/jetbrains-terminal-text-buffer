@@ -143,17 +143,17 @@ public class TerminalBuffer {
 
             col += w;
             cursorColPos = col;
-
+            int spillRow = row;
             // Propagate spill downward
             while (spill != null) {
-                row++;
+                spillRow++;
 
-                if (row >= height) {
+                if (spillRow >= height)  {
                     scrollUp();
-                    row = height - 1;
+                    spillRow = height - 1;
                 }
 
-                Line next = getScreenLine(row);
+                Line next = getScreenLine(spillRow);
                 spill = next.insertFragmentAtStart(spill);
             }
 
