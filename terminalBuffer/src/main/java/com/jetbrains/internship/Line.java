@@ -127,13 +127,90 @@ public final class Line {
         }
     }
 
+    public LineFragment insertCells(int col, int count, CellAttribute fillAttr) {
+        if (count <= 0) return null;
 
-    public boolean isWrapped() {
-        return wrapped;
+        // Fragment for spilled cells (right side)
+        int spillSize;
+        LineFragment fragment = null;
+
+        if (col + count > width) {
+            spillSize = col + count - width;
+            fragment = new LineFragment(spillSize);
+
+            // capture spilled cells
+            for (int i = 0; i < spillSize; i++) {
+                int src = width - spillSize + i;
+                fragment.codepoints[i] = codepoints[src];
+                fragment.cellTypes[i] = widths[src];
+                fragment.attributes[i] = getAttr(src);
+            }
+        }
+
+        // Shift cells to the right
+        for (int i = width - 1; i >= col + count; i--) {
+            codepoints[i] = codepoints[i - count];
+            widths[i] = widths[i - count];
+        }
+
+        // Clear inserted range
+        for (int i = col; i < Math.min(col + count, width); i++) {
+            codepoints[i] = 0;
+            widths[i] = CellType.normal;
+        }
+
+        // Reset attributes in inserted range
+        setAttrRange(col, Math.min(count, width - col), fillAttr);
+
+        return fragment;
     }
 
-    public void setWrapped(boolean wrapped) {
-        this.wrapped = wrapped;
+    public void putCodePoint(int col, int cp, int cellWidth, CellAttribute attr) {
+        // Clear any overlapped wide chars
+        clearCell(col, attr);
+
+        codepoints[col] = cp;
+        widths[col] = (cellWidth == 2)
+            ? CellType.leading
+            : CellType.normal;
+
+        setAttrRange(col, 1, attr);
+
+        if (cellWidth == 2 && col + 1 < width) {
+            codepoints[col + 1] = 0;
+            widths[col + 1] = CellType.trailing;
+            setAttrRange(col + 1, 1, attr);
+        }
+    }
+
+    public LineFragment insertFragmentAtStart(LineFragment fragment) {
+        if (fragment == null || fragment.size() == 0) return null;
+
+        int count = fragment.size();
+
+        LineFragment spill = null;
+        if (count > width) {
+            spill = new LineFragment(count - width);
+            for (int i = width; i < count; i++) {
+                spill.codepoints[i - width] = fragment.codepoints[i];
+                spill.cellTypes[i - width] = fragment.cellTypes[i];
+                spill.attributes[i - width] = fragment.attributes[i];
+            }
+            count = width;
+        }
+
+        for (int i = width - 1; i >= count; i--) {
+            codepoints[i] = codepoints[i - count];
+            widths[i] = widths[i - count];
+        }
+
+        for (int i = 0; i < count; i++) {
+            codepoints[i] = fragment.codepoints[i];
+            widths[i] = fragment.cellTypes[i];
+            setAttrRange(i, 1, fragment.attributes[i]);
+        }
+
+        return spill;
     }
 
     @Override
