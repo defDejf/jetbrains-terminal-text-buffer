@@ -22,7 +22,7 @@ public class TerminalBuffer {
 
         // init screen
         for (int i = 0; i < height; i++) {
-            lines.addLast(new Line(width, currentlyUsedAttr));
+            insertEmptyLineAtEnd();
         }
     }
 
@@ -59,9 +59,9 @@ public class TerminalBuffer {
         return new int[]{cursorRowPos, cursorColPos};
     }
 
-    public boolean setCursorPos(int rowPos, int colPos) {
-        if (rowPos < 0 || rowPos >= height) return false;
-        if (colPos < 0 || colPos >= width) return false;
+    public void setCursorPos(int rowPos, int colPos) {
+        if (rowPos < 0 || rowPos >= height) return;
+        if (colPos < 0 || colPos >= width) return;
 
         Line line = getScreenLine(rowPos);
 
@@ -73,15 +73,14 @@ public class TerminalBuffer {
 
         // check: should never end on trailing
         if (line.getCellType(col) == CellType.trailing) {
-            return false; // corrupt line state, should not happen
+            return; // corrupt line state, should not happen
         }
 
         cursorRowPos = rowPos;
         cursorColPos = col;
-        return true;
     }
 
-    public boolean writeTextOnLine(String text) {
+    public void writeTextOnLine(String text) {
         int i = 0;
         while (i < text.length()) {
             int codePoint = text.codePointAt(i);
@@ -106,10 +105,9 @@ public class TerminalBuffer {
                 newline();
             }
         }
-        return true;
     }
 
-    public boolean insertTextOnLine(String text) {
+    public void insertTextOnLine(String text) {
         int row = cursorRowPos;
         int col = cursorColPos;
 
@@ -169,7 +167,6 @@ public class TerminalBuffer {
 
         cursorRowPos = row;
         cursorColPos = col;
-        return true;
     }
 
     public boolean fillLineWithChar(int unicodeVal) {

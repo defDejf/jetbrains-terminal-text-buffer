@@ -1,6 +1,7 @@
 package com.jetbrains.internship;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public final class Line {
@@ -24,6 +25,7 @@ public final class Line {
         this.width = width;
         this.codepoints = new int[width];
         this.widths = new byte[width];
+        this.attributeSequences = new LinkedList<>();
         clear(defaultAttr);
     }
 
@@ -130,39 +132,33 @@ public final class Line {
     public LineFragment insertCells(int col, int count, CellAttribute fillAttr) {
         if (count <= 0) return null;
 
-        // Fragment for spilled cells (right side)
-        int spillSize;
-        LineFragment fragment = null;
-
-        if (col + count > width) {
-            spillSize = col + count - width;
-            fragment = new LineFragment(spillSize);
-
-            // capture spilled cells
+        // how many cells fall off the right edge
+        int spillSize = Math.max(0, col + count - width);
+        System.out.println(spillSize);
+        LineFragment spill = null;
+        if (spillSize > 0) {
+            spill = new LineFragment(spillSize);
             for (int i = 0; i < spillSize; i++) {
                 int src = width - spillSize + i;
-                fragment.codepoints[i] = codepoints[src];
-                fragment.cellTypes[i] = widths[src];
-                fragment.attributes[i] = getAttr(src);
+                spill.codepoints[i] = codepoints[src];
+                spill.cellTypes[i] = widths[src];
+                spill.attributes[i] = getAttr(src);
             }
         }
 
-        // Shift cells to the right
-        for (int i = width - 1; i >= col + count; i--) {
-            codepoints[i] = codepoints[i - count];
-            widths[i] = widths[i - count];
+        int shift = Math.min(count, width - col);
+        for (int i = width - 1; i >= col + shift; i--) {
+            codepoints[i] = codepoints[i - shift];
+            widths[i] = widths[i - shift];
         }
 
-        // Clear inserted range
-        for (int i = col; i < Math.min(col + count, width); i++) {
+        for (int i = col; i < col + shift; i++) {
             codepoints[i] = 0;
             widths[i] = CellType.normal;
+            setAttrRange(i, 1, fillAttr);
         }
 
-        // Reset attributes in inserted range
-        setAttrRange(col, Math.min(count, width - col), fillAttr);
-
-        return fragment;
+        return spill;
     }
 
     public void putCodePoint(int col, int cp, int cellWidth, CellAttribute attr) {
