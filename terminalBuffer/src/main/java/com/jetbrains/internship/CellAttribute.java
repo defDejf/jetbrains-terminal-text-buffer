@@ -10,16 +10,15 @@ package com.jetbrains.internship;
  * @param foregroundColor 0 - 15 for ANSI colors, -1 for whatever default is
  * @param backgroundColor 0 - 15 for ANSI colors, -1 for whatever default is
  * @param styleMask       style mask:
- *                        bit 0 → bold
- *                        bit 1 → italic
- *                        bit 2 → underline
+ *                        bit 0 - bold
+ *                        bit 1 - italic
+ *                        bit 2 - underline
+ *                        bit 3 - strikethrough
  */
 public record CellAttribute(byte foregroundColor, byte backgroundColor, byte styleMask) {
 
     // fully default style
-    public CellAttribute {
-        foregroundColor = -1;
-        backgroundColor = -1;
-        styleMask = 0;
+    public CellAttribute() {
+        this((byte) -1, (byte) -1, (byte) 0);
     }
 }
