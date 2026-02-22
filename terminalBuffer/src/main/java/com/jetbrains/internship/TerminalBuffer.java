@@ -96,7 +96,7 @@ public class TerminalBuffer {
             if (w == 2 && cursorColPos == width - 1) {
                 newline();
             }
-
+//            System.out.println("Putting char at row: " + cursorRowPos + " col: " + cursorColPos);
             Line line = getScreenLine(cursorRowPos);
             line.putCodePoint(cursorColPos, codePoint, w, currentlyUsedAttr);
             cursorColPos += w;
@@ -117,9 +117,9 @@ public class TerminalBuffer {
             i += Character.charCount(cp);
 
             if (cp == '\n') {
-                cursorColPos = col;
                 newline();
                 row = cursorRowPos;
+                col = cursorColPos;
                 continue;
             }
 
@@ -146,6 +146,7 @@ public class TerminalBuffer {
             int spillRow = row;
             // Propagate spill downward
             while (spill != null) {
+//                System.out.println(new StringBuilder().appendCodePoint(spill.codepoints[0]));
                 spillRow++;
 
                 if (spillRow >= height)  {
@@ -154,6 +155,7 @@ public class TerminalBuffer {
                 }
 
                 Line next = getScreenLine(spillRow);
+//                System.out.println(next.toString());
                 spill = next.insertFragmentAtStart(spill);
             }
 
@@ -169,7 +171,8 @@ public class TerminalBuffer {
         cursorColPos = col;
     }
 
-    public boolean fillLineWithChar(int unicodeVal) {
+
+    public void fillLineWithChar(int unicodeVal) {
         int w = getCharacterWidth(unicodeVal);
         int effectiveWidth = width;
         if (w == 2 && (width % 2 != 0)) {
@@ -182,7 +185,6 @@ public class TerminalBuffer {
             line.putCodePoint(col, unicodeVal, w, currentlyUsedAttr);
             col += w;
         }
-        return true;
     }
 
     public void insertEmptyLineAtEnd() {

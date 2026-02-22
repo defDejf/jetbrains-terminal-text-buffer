@@ -36,23 +36,34 @@ class TerminalBufferTest {
     void writeTextOnLine_shouldWrapAndScroll_whenTextExceedsScreen() {
         TerminalBuffer buffer = new TerminalBuffer(3, 2, 1);
 
-        buffer.writeTextOnLine("abcdefghi");
+        buffer.writeTextOnLine("abcdefgh");
 
-        assertEquals("def\nghi", buffer.getScreenText());
-        assertEquals("abc\ndef\nghi", buffer.getAllText());
-        assertArrayEquals(new int[]{1, 3}, buffer.getCursorPos());
+        assertEquals("def\ngh ", buffer.getScreenText());
+        assertEquals("abc\ndef\ngh ", buffer.getAllText());
+        assertArrayEquals(new int[]{1, 2}, buffer.getCursorPos());
     }
 
     @Test
     void insertTextOnLine_shouldInsertAtCursorAndPushOverflowToNextLines_whenContentExists() {
         TerminalBuffer buffer = new TerminalBuffer(4, 3, 2);
-        buffer.writeTextOnLine("ABCD\nEFGH");
+        buffer.writeTextOnLine("ABCDEFGH");
         buffer.setCursorPos(0, 1);
 
         buffer.insertTextOnLine("ZZ");
 
         assertEquals("AZZB\nCDEF\nGH  ", buffer.getScreenText());
         assertArrayEquals(new int[]{0, 3}, buffer.getCursorPos());
+    }
+
+    @Test
+    void insertTextOnLine_shouldResetInsertionColumnAfterNewline_whenTextContainsNewline() {
+        TerminalBuffer buffer = new TerminalBuffer(4, 3, 2);
+        buffer.writeTextOnLine("ABCD");
+        buffer.setCursorPos(0, 2);
+
+        buffer.insertTextOnLine("X\nY");
+
+        assertEquals("ABXC\nYD  \n    ", buffer.getScreenText());
     }
 
     @Test

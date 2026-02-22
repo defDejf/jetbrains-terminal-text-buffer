@@ -183,30 +183,53 @@ public final class Line {
 
         int count = fragment.size();
 
-        LineFragment spill = null;
-        if (count > width) {
-            spill = new LineFragment(count - width);
-            for (int i = width; i < count; i++) {
-                spill.codepoints[i - width] = fragment.codepoints[i];
-                spill.cellTypes[i - width] = fragment.cellTypes[i];
-                spill.attributes[i - width] = fragment.attributes[i];
-            }
-            count = width;
+        int carryFromFragment = Math.max(0, count - width);
+        int insertedCount = Math.min(count, width);
+        int displacedCount = insertedCount < width ? insertedCount : 0;
+        LineFragment spill = new LineFragment(carryFromFragment + displacedCount);
+
+        for (int i = 0; i < carryFromFragment; i++) {
+            int src = width + i;
+            spill.codepoints[i] = fragment.codepoints[src];
+            spill.cellTypes[i] = fragment.cellTypes[src];
+            spill.attributes[i] = fragment.attributes[src];
         }
 
-        for (int i = width - 1; i >= count; i--) {
-            codepoints[i] = codepoints[i - count];
-            widths[i] = widths[i - count];
+        for (int i = 0; i < displacedCount; i++) {
+            int src = width - displacedCount + i;
+            int dst = carryFromFragment + i;
+            spill.codepoints[dst] = codepoints[src];
+            spill.cellTypes[dst] = widths[src];
+            spill.attributes[dst] = getAttr(src);
         }
 
-        for (int i = 0; i < count; i++) {
+        for (int i = width - 1; i >= insertedCount; i--) {
+            codepoints[i] = codepoints[i - insertedCount];
+            widths[i] = widths[i - insertedCount];
+        }
+
+        for (int i = 0; i < insertedCount; i++) {
             codepoints[i] = fragment.codepoints[i];
             widths[i] = fragment.cellTypes[i];
             setAttrRange(i, 1, fragment.attributes[i]);
         }
 
+        if (spill.size() == 0 || isBlankFragment(spill)) {
+            return null;
+        }
         return spill;
+
     }
+
+    private boolean isBlankFragment(LineFragment fragment) {
+        for (int i = 0; i < fragment.size(); i++) {
+            if (fragment.codepoints[i] != 0 || fragment.cellTypes[i] != CellType.normal) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     @Override
     public String toString() {

@@ -33,7 +33,7 @@ class LineTest {
         assertEquals('界', line.getCodePoint(1));
         assertEquals(CellType.leading, line.getCellType(1));
         assertEquals(CellType.trailing, line.getCellType(2));
-        assertEquals(-1, line.getCodePoint(2)); // on line level API we access double wide chars by leading
+        assertEquals(-1, line.getCodePoint(2));
         assertEquals(attr, line.getAttr(1));
         assertEquals(attr, line.getAttr(2));
     }
@@ -69,6 +69,33 @@ class LineTest {
         assertEquals('D', spill.codepoints[0]);
         assertEquals('E', spill.codepoints[1]);
         assertEquals("AB  C", line.toString());
+    }
+
+
+    @Test
+    void insertFragmentAtStart_shouldSpillDisplacedTail_whenFragmentFitsLine() {
+        CellAttribute attr = new CellAttribute((byte) 1, (byte) 2, (byte) 3);
+        Line line = new Line(4, new CellAttribute());
+        line.putCodePoint(0, 'E', 1, attr);
+        line.putCodePoint(1, 'F', 1, attr);
+        line.putCodePoint(2, 'G', 1, attr);
+        line.putCodePoint(3, 'H', 1, attr);
+
+        LineFragment fragment = new LineFragment(2);
+        fragment.codepoints[0] = 'C';
+        fragment.codepoints[1] = 'D';
+        fragment.cellTypes[0] = CellType.normal;
+        fragment.cellTypes[1] = CellType.normal;
+        fragment.attributes[0] = attr;
+        fragment.attributes[1] = attr;
+
+        LineFragment spill = line.insertFragmentAtStart(fragment);
+
+        assertEquals("CDEF", line.toString());
+        assertNotNull(spill);
+        assertEquals(2, spill.size());
+        assertEquals('G', spill.codepoints[0]);
+        assertEquals('H', spill.codepoints[1]);
     }
 
     @Test
